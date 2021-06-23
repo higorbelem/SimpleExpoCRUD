@@ -27,6 +27,14 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "apiKey": "AIzaSyAOrtUAJ7gt6-wg7qv626_f7ZBYZSDx-P4",
+      "authDomain": "uber-1557782268557.firebaseapp.com",
+      "projectId": "uber-1557782268557",
+      "storageBucket": "uber-1557782268557.appspot.com",
+      "messagingSenderId": "539616255035",
+      "appId": "1:539616255035:web:4c3bb49de7ba324968501e"
     }
   }
 }
