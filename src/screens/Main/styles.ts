@@ -20,3 +20,9 @@ export const Text = styled.Text`
   font-size: 24px;
   font-family: ${fonts.bold};
 `;
+
+export const UserCoordinates = styled.Text`
+  color: ${colors.mainText};
+  font-size: 16px;
+  font-family: ${fonts.regular};
+`;

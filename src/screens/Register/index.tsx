@@ -16,15 +16,17 @@ import {
     RegisterButtonText,
     ContainerAvatar,
     IconAvatar,
-    ImageAvatar
+    ImageAvatar,
+    BackButton,
+    BackIcon
 } from './styles';
 import colors from '../../styles/colors';
 import { manipulateAsync } from 'expo-image-manipulator';
 import { useAuth } from '../../hooks/useAuth';
 import firebase from 'firebase';
 
-export default function Register({navigation}: any) {
-    const {register} = useAuth();
+export default function Register({navigation, route}: any) {
+    const {user, register, edit} = useAuth();
 
     const [image, setImage] = useState(null as any);
     const [name, setName] = useState(null as any);
@@ -34,13 +36,21 @@ export default function Register({navigation}: any) {
 
     const [loading, setLoading] = useState(false);
 
-    const checkFields = () => {
+    useEffect(() => {
+        console.log(user)
+        if(route.params?.edit){
+            //setImage(user?.avatar);
+            setName(user?.name);
+            setEmail(user?.email);
+        }
+    }, [user]);
+
+    const checkFields = (isEdit: boolean) => {
         return(
-            image && 
             name && name !== '' && 
-            email && email !== '' && 
-            pass && pass !== '' && 
-            repeatePass && repeatePass !== ''
+            ((email && email !== '' && pass && pass !== '' && 
+            repeatePass && repeatePass !== '' && 
+            image) || isEdit)
         )
     }
 
@@ -56,17 +66,23 @@ export default function Register({navigation}: any) {
         )
     }   
 
+    const checkHasEdited = () => {
+        return(
+            image !== null || name !== user?.name || email !== user?.email
+        )
+    }    
+
     const handleRegister = async (name: string, email: string, pass: string, photo: any) => {
-        if(checkFields()) {
-            if(checkPass()) {
-                if(checkPassSize()) {
+        if(checkFields(route.params?.edit)) {
+            if(route.params?.edit){
+                if(checkHasEdited()){
                     try{
                         setLoading(true);
 
-                        const success = await register(name, email, pass, photo);
+                        const success = await edit(name, photo);
 
                         if(success) {
-                            navigation.reset({index: 0, routes: [{name: 'Drawer'}]});
+                            navigation.goBack();
                         }
 
                         setLoading(false);
@@ -75,10 +91,31 @@ export default function Register({navigation}: any) {
                         setLoading(false);
                     }
                 }else{
-                    Alert.alert('', 'Senha precisa ter pelo menos 6 characteres.');
+                    Alert.alert('', 'Nenhuma alteração foi feita.');
                 }
             }else{
-                Alert.alert('', 'Senhas não estão iguais.');
+                if(checkPass()) {
+                    if(checkPassSize()) {
+                        try{
+                            setLoading(true);
+    
+                            const success = await register(name, email, pass, photo);
+    
+                            if(success) {
+                                navigation.reset({index: 0, routes: [{name: 'Drawer'}]});
+                            }
+    
+                            setLoading(false);
+                        }catch(e){
+                            Alert.alert('', firebaseErrors(e));
+                            setLoading(false);
+                        }
+                    }else{
+                        Alert.alert('', 'Senha precisa ter pelo menos 6 characteres.');
+                    }
+                }else{
+                    Alert.alert('', 'Senhas não estão iguais.');
+                }
             }
         }else{
             Alert.alert('', 'Todos campos precisam ser preenchidos e uma foto escolhida.');
@@ -91,6 +128,12 @@ export default function Register({navigation}: any) {
                 source={require('../../imgs/login_background.jpg')}
                 resizeMode='cover'
             />
+
+            <BackButton
+                onPress={() => navigation.goBack()}
+            >
+                <BackIcon name="chevron-left" size={38} color={colors.invertedMainText} />
+            </BackButton>
 
             <Container>
                 <Logo 
@@ -124,8 +167,12 @@ export default function Register({navigation}: any) {
                         source={
                             image ? {
                                 uri: image.uri
-                            } :
-                            require('../../imgs/no_photo.png')
+                            } : (
+                                route.params?.edit && user?.avatar ?
+                                    {uri: user?.avatar}
+                                :
+                                    require('../../imgs/no_photo.png')
+                            )
                         }
                         resizeMode='cover'
                         style={image ? {borderColor: colors.green, borderWidth: 2} : {}}
@@ -142,49 +189,62 @@ export default function Register({navigation}: any) {
                     placeholder='Nome'
                     onChangeText={(text) => setName(text)}
                     state={name ? (name !== '' ? 'correct' : 'wrong') : ''}
+                    value={name}
                 />
 
-                <Input
-                    placeholder='Email'
-                    onChangeText={(text) => setEmail(text)}
-                    state={email ? (email !== '' ? 'correct' : 'wrong') : ''}
-                />
+                {
+                    !route.params?.edit && (
+                        <>
+                            <Input
+                                placeholder='Email'
+                                onChangeText={(text) => setEmail(text)}
+                                state={email ? (email !== '' ? 'correct' : 'wrong') : ''}
+                                value={email}
+                            />
 
-                <Input
-                    placeholder='Senha'
-                    onChangeText={(text) => setPass(text)}
-                    state={pass ? (pass !== '' && pass.length >= 6 ? 'correct' : 'wrong') : ''}
-                    isPass
-                />
+                            <Input
+                                placeholder='Senha'
+                                onChangeText={(text) => setPass(text)}
+                                state={pass ? (pass !== '' && pass.length >= 6 ? 'correct' : 'wrong') : ''}
+                                isPass
+                            />
 
-                <Input
-                    placeholder='Repita a senha'
-                    onChangeText={(text) => setRepeatePass(text)}
-                    state={repeatePass ? (repeatePass !== '' && repeatePass.length >= 6 ? 'correct' : 'wrong') : ''}
-                    isPass
-                />
+                            <Input
+                                placeholder='Repita a senha'
+                                onChangeText={(text) => setRepeatePass(text)}
+                                state={repeatePass ? (repeatePass !== '' && repeatePass.length >= 6 ? 'correct' : 'wrong') : ''}
+                                isPass
+                            />
+                        </>
+                    )
+                }
 
                 <Button 
-                    text='Cadastrar'
+                    text={route.params?.edit ? 'Concluir' : 'Registrar'}
                     onPress={() => handleRegister(name, email, pass, image)}
                     disabled={loading}
                     loading={loading}
                 />
             </Container>
+            
 
-            <View style={{flexDirection: 'row', marginBottom: 20}}>
-                <Text>
-                    Já tem uma conta?
-                </Text>
-                <RegisterButton 
-                    activeOpacity={0.8}
-                    onPress={() => navigation.navigate('Login')}    
-                >
-                    <RegisterButtonText>
-                        Entre
-                    </RegisterButtonText>
-                </RegisterButton>
-            </View>
+            {
+                !route.params?.edit && (
+                    <View style={{flexDirection: 'row', marginBottom: 20}}>
+                        <Text>
+                            Já tem uma conta?
+                        </Text>
+                        <RegisterButton 
+                            activeOpacity={0.8}
+                            onPress={() => navigation.navigate('Login')}    
+                        >
+                            <RegisterButtonText>
+                                Entre
+                            </RegisterButtonText>
+                        </RegisterButton>
+                    </View>
+                )
+            }
             
         </Wrapper>
     )

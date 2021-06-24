@@ -1,6 +1,6 @@
-import {Dimensions} from 'react-native';
+import {Dimensions, StatusBar} from 'react-native';
 import styled from 'styled-components/native';
-import { FontAwesome5 } from '@expo/vector-icons';
+import { Feather, FontAwesome5 } from '@expo/vector-icons';
 
 import colors from '../../styles/colors';
 import fonts from '../../styles/fonts';
@@ -78,4 +78,18 @@ export const IconAvatar = styled(FontAwesome5)`
   position: absolute;
   bottom: 5px;
   right: 5px;
+`;
+
+export const BackButton = styled.TouchableOpacity`
+  position: absolute;
+  top: ${(StatusBar.currentHeight || 0) + 10}px;
+  left: 10px;
+  width: 50px;
+  height: 50px;
+  justify-content: center;
+  align-items: center;
+`;
+
+export const BackIcon = styled(Feather)`
+ 
 `;

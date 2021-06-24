@@ -12,6 +12,7 @@ export type InputProps = {
     state?: 'correct' | 'wrong' | '';
     onChangeText?: (text: string) => void;
     isPass?: boolean;
+    value?: string;
 }
 
 export default function Input(props: InputProps) {
@@ -38,6 +39,7 @@ export default function Input(props: InputProps) {
             }}
             onChangeText={props.onChangeText}
             secureTextEntry={props.isPass}
+            value={props.value}
         />
     )
 }
